@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Search, Bookmark } from 'lucide-react';
+import { Home, Sparkles, Search, Bookmark } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useWishlist } from '../../hooks/useWishlist.js';
 
@@ -14,6 +14,11 @@ export default function MobileNav() {
       label: 'Home',
       icon: Home,
       end: true,
+    },
+    {
+      to: '/new-releases',
+      label: 'New',
+      icon: Sparkles,
     },
     {
       to: '/search',
