@@ -1,0 +1,12 @@
+{
+  "name": "cinescope-movie-discovery",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Full-stack Movie Discovery Application using React, Node.js, Express, and PostgreSQL",
+  "scripts": {
+    "server:dev": "npm --prefix server run dev",
+    "client:dev": "npm --prefix client run dev",
+    "server:start": "npm --prefix server run start",
+    "client:build": "npm --prefix client run build"
+  }
+}
