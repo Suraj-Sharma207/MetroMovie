@@ -208,7 +208,13 @@ export default function AuthModal() {
         setSuccessToast(null);
       }, 700);
     } catch (err) {
-      setGeneralError(err.message || 'Unable to sign in. Please check your credentials and try again.');
+      const rawMsg = err.message || 'Unable to sign in. Please check your credentials and try again.';
+      const isTechnical = /prisma|database|invocation|neon\.tech|Can't reach/i.test(rawMsg);
+      setGeneralError(
+        isTechnical
+          ? 'Unable to connect to account services right now. Please try again in a few moments.'
+          : rawMsg
+      );
       setIsSubmitting(false);
     }
   };

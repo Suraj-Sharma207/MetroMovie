@@ -11,12 +11,29 @@ export const errorHandler = (err, req, res, next) => {
     console.error(err.stack);
   }
 
+  // Detect internal Prisma or database connection failures
+  const isDbError =
+    err.name?.includes('Prisma') ||
+    (typeof message === 'string' && (
+      message.includes('prisma') ||
+      message.includes('database server') ||
+      message.includes('neon.tech') ||
+      message.includes('invocation') ||
+      message.includes("Can't reach")
+    ));
+
+  // Mask internal 500 and database errors from the client
+  let clientMessage = message;
+  if (statusCode >= 500 || isDbError) {
+    clientMessage = 'Service is temporarily unavailable. Please try again shortly.';
+  }
+
   res.status(statusCode).json({
     success: false,
     error: {
-      message,
+      message: clientMessage,
       statusCode,
-      ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
+      ...(process.env.NODE_ENV !== 'production' && !isDbError && { stack: err.stack })
     }
   });
 };

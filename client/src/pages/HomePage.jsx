@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { Flame, Star, Sparkles, ChevronRight, Compass, TrendingUp, Tv } from 'lucide-react';
+import { Flame, Star, Sparkles, ChevronRight, Compass, Tv } from 'lucide-react';
 import { movieApi } from '../services/movieApi.js';
 import { useRegion } from '../context/RegionContext.jsx';
 import TrendingHero from '../components/movies/TrendingHero.jsx';
@@ -81,7 +81,6 @@ export default function HomePage() {
   const popularMovies = (popularData?.results || []).slice(0, 10);
   const topShows = (showsData || []).slice(0, 10);
   const topRatedMovies = (topRatedData?.results || []).slice(0, 10);
-  const trendingRowMovies = trendingMovies.slice(0, 10);
 
   // Popular section title changes if a genre is selected
   const popularTitle = selectedGenre
@@ -125,17 +124,7 @@ export default function HomePage() {
         />
       </section>
 
-      {/* ── TRENDING THIS WEEK ────────────────────────────────────────── */}
-      {/* Mobile / Tablet: horizontal row */}
-      <div className="md:hidden">
-        <MovieRow
-          title="Trending This Week"
-          icon={TrendingUp}
-          movies={trendingRowMovies}
-          isLoading={isTrendingLoading}
-          seeAllTo="/search?sort=popularity.desc"
-        />
-      </div>
+
 
       {/* ── POPULAR MOVIES ────────────────────────────────────────────── */}
       {isPopularError ? (
