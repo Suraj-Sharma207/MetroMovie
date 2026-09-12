@@ -5,7 +5,11 @@ import RatingBadge from '../common/RatingBadge.jsx';
 import { HeroSkeleton } from '../common/Skeleton.jsx';
 import { useWishlist } from '../../hooks/useWishlist.js';
 
-export default function TrendingHero({ movies = [], isLoading = false }) {
+export default function TrendingHero({
+  movies = [],
+  isLoading = false,
+  region = null,
+}) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const { isMovieWishlisted, toggleWishlist } = useWishlist();
 
@@ -62,8 +66,15 @@ export default function TrendingHero({ movies = [], isLoading = false }) {
         <div className="max-w-2xl space-y-3 md:space-y-4">
           {/* Tag & Rating */}
           <div className="flex items-center gap-3 flex-wrap">
-            <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-cinema-accent text-white shadow-glow">
-              Trending # {currentIndex + 1}
+            <span className="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-cinema-accent text-white shadow-glow flex items-center gap-1.5">
+              {region && region.code !== 'GLOBAL' && (
+                <span>{region.flag}</span>
+              )}
+              <span>
+                {region && region.code !== 'GLOBAL'
+                  ? `Trending in ${region.name} #${currentIndex + 1}`
+                  : `Trending #${currentIndex + 1}`}
+              </span>
             </span>
             <RatingBadge rating={movie.rating} size="sm" />
             {movie.releaseYear && (

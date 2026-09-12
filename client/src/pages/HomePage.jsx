@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { Flame, Star, Sparkles, ChevronRight, Compass } from 'lucide-react';
 import { movieApi } from '../services/movieApi.js';
+import { useRegion } from '../context/RegionContext.jsx';
 import TrendingHero from '../components/movies/TrendingHero.jsx';
 import GenrePills from '../components/movies/GenrePills.jsx';
 import MovieCard from '../components/movies/MovieCard.jsx';
@@ -11,8 +12,9 @@ import { ErrorBanner } from '../components/common/EmptyState.jsx';
 
 export default function HomePage() {
   const [selectedGenre, setSelectedGenre] = useState('');
+  const { currentRegion, isGlobal } = useRegion();
 
-  // 1. Fetch Trending movies for Hero Spotlight
+  // 1. Fetch Trending movies for Hero Spotlight (localized by region)
   const {
     data: trendingMovies = [],
     isLoading: isTrendingLoading,
@@ -20,8 +22,8 @@ export default function HomePage() {
     error: trendingError,
     refetch: refetchTrending,
   } = useQuery({
-    queryKey: ['movies', 'trending'],
-    queryFn: () => movieApi.getTrending(),
+    queryKey: ['movies', 'trending', currentRegion.code],
+    queryFn: () => movieApi.getTrending(currentRegion.code),
   });
 
   // 2. Fetch Genres list
@@ -30,7 +32,7 @@ export default function HomePage() {
     queryFn: () => movieApi.getGenres(),
   });
 
-  // 3. Fetch Popular / Discovery movies (filtered by selected genre if any)
+  // 3. Fetch Popular / Discovery movies (filtered by selected genre and region)
   const {
     data: popularData,
     isLoading: isPopularLoading,
@@ -38,12 +40,13 @@ export default function HomePage() {
     error: popularError,
     refetch: refetchPopular,
   } = useQuery({
-    queryKey: ['movies', 'popular', selectedGenre],
+    queryKey: ['movies', 'popular', currentRegion.code, selectedGenre],
     queryFn: () =>
       movieApi.discover({
         page: 1,
         sortBy: 'popularity.desc',
         genre: selectedGenre || undefined,
+        region: currentRegion.code,
       }),
   });
 
@@ -70,7 +73,11 @@ export default function HomePage() {
       {isTrendingError ? (
         <ErrorBanner message={trendingError?.message} onRetry={refetchTrending} />
       ) : (
-        <TrendingHero movies={trendingMovies} isLoading={isTrendingLoading} />
+        <TrendingHero
+          movies={trendingMovies}
+          isLoading={isTrendingLoading}
+          region={currentRegion}
+        />
       )}
 
       {/* 2. Genre Pills Section */}
@@ -102,10 +109,14 @@ export default function HomePage() {
               <Flame className="w-5 h-5 text-cinema-accent" />
               {selectedGenre
                 ? `${genres.find((g) => String(g.id) === String(selectedGenre))?.name || 'Selected'} Movies`
-                : 'Popular Movies'}
+                : isGlobal
+                ? 'Popular Movies'
+                : `Popular in ${currentRegion.name} ${currentRegion.flag}`}
             </h2>
             <p className="text-xs text-cinema-muted">
-              Most watched and trending titles this week
+              {isGlobal
+                ? 'Most watched and trending titles this week'
+                : `Top trending and most watched titles in ${currentRegion.name}`}
             </p>
           </div>
           <Link

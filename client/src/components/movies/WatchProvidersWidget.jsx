@@ -3,20 +3,15 @@ import { useQuery } from '@tanstack/react-query';
 import { ExternalLink, Tv, ShoppingBag, Film } from 'lucide-react';
 import { movieApi } from '../../services/movieApi.js';
 import { Skeleton } from '../common/Skeleton.jsx';
-
-export const SUPPORTED_REGIONS = [
-  { code: 'IN', name: 'India', flag: '🇮🇳' },
-  { code: 'US', name: 'United States', flag: '🇺🇸' },
-  { code: 'GB', name: 'United Kingdom', flag: '🇬🇧' },
-  { code: 'CA', name: 'Canada', flag: '🇨🇦' },
-  { code: 'AU', name: 'Australia', flag: '🇦🇺' },
-];
+import { useRegion, SUPPORTED_REGIONS } from '../../context/RegionContext.jsx';
 
 export default function WatchProvidersWidget({
   movieId,
   initialProviders = null,
 }) {
-  const [selectedCountry, setSelectedCountry] = useState('IN');
+  const { currentRegion: userRegion } = useRegion();
+  const defaultCode = userRegion.code !== 'GLOBAL' ? userRegion.code : 'IN';
+  const [selectedCountry, setSelectedCountry] = useState(defaultCode);
 
   // Dynamically fetch watch providers when user switches country
   const {

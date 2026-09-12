@@ -38,19 +38,37 @@ class MovieService {
   }
 
   /**
-   * Fetch daily trending movies for hero spotlight
+   * Fetch daily trending movies for hero spotlight (supports regional or global)
    */
-  async getTrendingMovies() {
-    const cacheKey = 'tmdb:trending:day';
+  async getTrendingMovies(region = 'GLOBAL') {
+    const cleanRegion = (region || 'GLOBAL').toUpperCase();
+    const cacheKey = `tmdb:trending:${cleanRegion}:day`;
     const cached = cacheService.get(cacheKey);
     if (cached) return cached;
 
     const genreMap = await this.getGenreMap();
-    const response = await tmdbClient.get('/trending/movie/day');
+    let movies = [];
 
-    const movies = (response.data?.results || [])
-      .slice(0, 10)
-      .map(m => normalizeMovieSummary(m, genreMap));
+    if (cleanRegion !== 'GLOBAL') {
+      // Fetch trending in the specified region via discover
+      const response = await tmdbClient.get('/discover/movie', {
+        params: {
+          region: cleanRegion,
+          watch_region: cleanRegion,
+          sort_by: 'popularity.desc',
+          include_adult: false,
+          'vote_count.gte': 10
+        }
+      });
+      movies = (response.data?.results || [])
+        .slice(0, 10)
+        .map(m => normalizeMovieSummary(m, genreMap));
+    } else {
+      const response = await tmdbClient.get('/trending/movie/day');
+      movies = (response.data?.results || [])
+        .slice(0, 10)
+        .map(m => normalizeMovieSummary(m, genreMap));
+    }
 
     cacheService.set(cacheKey, movies, CACHE_TTLS.TRENDING);
     return movies;
@@ -64,10 +82,12 @@ class MovieService {
     sortBy = 'popularity.desc',
     genre,
     year,
-    minRating
+    minRating,
+    region
   } = {}) {
     const sanitizedPage = Math.max(1, parseInt(page, 10) || 1);
-    const cacheKey = `tmdb:discover:${sanitizedPage}:${sortBy}:${genre || 'all'}:${year || 'all'}:${minRating || 'all'}`;
+    const cleanRegion = region && region !== 'GLOBAL' ? region.toUpperCase() : undefined;
+    const cacheKey = `tmdb:discover:${sanitizedPage}:${sortBy}:${genre || 'all'}:${year || 'all'}:${minRating || 'all'}:${cleanRegion || 'all'}`;
 
     const cached = cacheService.get(cacheKey);
     if (cached) return cached;
@@ -79,6 +99,10 @@ class MovieService {
       'vote_count.gte': 50 // Avoid obscure noise with 1-2 votes
     };
 
+    if (cleanRegion) {
+      params.region = cleanRegion;
+      params.watch_region = cleanRegion;
+    }
     if (genre) params.with_genres = genre;
     if (year) params.primary_release_year = year;
     if (minRating) params['vote_average.gte'] = minRating;

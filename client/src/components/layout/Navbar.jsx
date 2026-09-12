@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Film, Search, Bookmark, Compass, Home, User, LogOut, LogIn } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext.jsx';
 import { useWishlist } from '../../hooks/useWishlist.js';
+import RegionSelector from '../common/RegionSelector.jsx';
 
 export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -83,8 +84,10 @@ export default function Navbar() {
           </form>
         </div>
 
-        {/* Auth / Account Controls */}
-        <div className="flex items-center gap-2">
+        {/* Region & Auth / Account Controls */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          <RegionSelector />
+
           {isAuthenticated ? (
             <div className="flex items-center gap-2">
               <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-cinema-card border border-cinema-border/60 text-xs text-cinema-text">

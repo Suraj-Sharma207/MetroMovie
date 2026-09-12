@@ -3,11 +3,13 @@ import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Compass, ChevronLeft, ChevronRight } from 'lucide-react';
 import { movieApi } from '../services/movieApi.js';
+import { useRegion } from '../context/RegionContext.jsx';
 import MovieFilterBar from '../components/movies/MovieFilterBar.jsx';
 import MovieGrid from '../components/movies/MovieGrid.jsx';
 
 export default function DiscoverPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { currentRegion, isGlobal } = useRegion();
 
   // Extract query parameters with defaults
   const page = parseInt(searchParams.get('page') || '1', 10);
@@ -22,7 +24,7 @@ export default function DiscoverPage() {
     queryFn: () => movieApi.getGenres(),
   });
 
-  // Fetch Discover results with TanStack Query
+  // Fetch Discover results with TanStack Query (localized by region)
   const {
     data: discoverData,
     isLoading,
@@ -30,7 +32,7 @@ export default function DiscoverPage() {
     error,
     refetch,
   } = useQuery({
-    queryKey: ['movies', 'discover', { page, genre, sort, rating, year }],
+    queryKey: ['movies', 'discover', { page, genre, sort, rating, year, region: currentRegion.code }],
     queryFn: () =>
       movieApi.discover({
         page,
@@ -38,6 +40,7 @@ export default function DiscoverPage() {
         genre: genre || undefined,
         minRating: rating || undefined,
         year: year || undefined,
+        region: currentRegion.code,
       }),
     keepPreviousData: true,
   });

@@ -12,7 +12,8 @@ export const getGenres = async (req, res, next) => {
 
 export const getTrendingMovies = async (req, res, next) => {
   try {
-    const movies = await movieService.getTrendingMovies();
+    const { region, country } = req.query;
+    const movies = await movieService.getTrendingMovies(region || country || 'GLOBAL');
     res.status(200).json({ success: true, data: movies });
   } catch (err) {
     next(err);
@@ -21,13 +22,14 @@ export const getTrendingMovies = async (req, res, next) => {
 
 export const discoverMovies = async (req, res, next) => {
   try {
-    const { page, sortBy, genre, year, minRating } = req.query;
+    const { page, sortBy, genre, year, minRating, region, country } = req.query;
     const data = await movieService.discoverMovies({
       page,
       sortBy,
       genre,
       year,
-      minRating
+      minRating,
+      region: region || country
     });
     res.status(200).json({ success: true, ...data });
   } catch (err) {

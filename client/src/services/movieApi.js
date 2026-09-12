@@ -10,10 +10,12 @@ export const movieApi = {
   },
 
   /**
-   * Fetch trending daily movies for Hero Spotlight
+   * Fetch trending daily movies for Hero Spotlight (supports region)
    */
-  async getTrending() {
-    const res = await apiClient.get('/movies/trending');
+  async getTrending(region) {
+    const res = await apiClient.get('/movies/trending', {
+      params: region ? { region } : undefined,
+    });
     return res.data.data;
   },
 
