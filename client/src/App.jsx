@@ -6,12 +6,14 @@ import DiscoverPage from './pages/DiscoverPage.jsx';
 import SearchPage from './pages/SearchPage.jsx';
 import MovieDetailsPage from './pages/MovieDetailsPage.jsx';
 import WishlistPage from './pages/WishlistPage.jsx';
+import NewReleasesPage from './pages/NewReleasesPage.jsx';
 
 export default function App() {
   return (
     <Routes>
       <Route element={<AppLayout />}>
         <Route path="/" element={<HomePage />} />
+        <Route path="/new-releases" element={<NewReleasesPage />} />
         <Route path="/discover" element={<DiscoverPage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/movie/:id" element={<MovieDetailsPage />} />

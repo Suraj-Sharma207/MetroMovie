@@ -28,6 +28,10 @@ pids
 *.pid
 *.seed
 *.pid.lock
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
 
 # Editor & OS artifacts
 .vscode/

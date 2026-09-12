@@ -5,7 +5,10 @@ import {
   discoverMovies,
   searchMovies,
   getMovieDetails,
-  getWatchProviders
+  getWatchProviders,
+  getTopShows,
+  getNewReleases,
+  getUpcomingMovies,
 } from '../controllers/movieController.js';
 
 const router = Router();
@@ -15,6 +18,15 @@ router.get('/genres', getGenres);
 
 // Trending daily movies for Hero Spotlight
 router.get('/trending', getTrendingMovies);
+
+// Top TV / Web series (supports region)
+router.get('/shows', getTopShows);
+
+// New releases (now playing in theatres/streaming)
+router.get('/new-releases', getNewReleases);
+
+// Upcoming movies
+router.get('/upcoming', getUpcomingMovies);
 
 // Discover / browse movies with filters & sorting
 router.get('/', discoverMovies);

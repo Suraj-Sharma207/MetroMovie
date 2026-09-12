@@ -3,18 +3,30 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    /* Prevent horizontal overflow at the document level */
+    overflow-x: hidden;
+  }
+
   body {
     background-color: #0a0c10;
     color: #f1f3f7;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     overflow-x: hidden;
+    /* Prevent bounce-scroll from revealing overflow */
+    overscroll-behavior-x: none;
+  }
+
+  /* Smooth scrolling for page navigation */
+  html {
+    scroll-behavior: smooth;
   }
 }
 
-/* Custom smooth scrollbars */
+/* ===== SCROLLBAR STYLES ===== */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -30,14 +42,10 @@
   background: #363e54;
 }
 
-/* Shimmer animation for skeletons */
+/* ===== SKELETON SHIMMER ===== */
 @keyframes shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
 .skeleton-shimmer {
@@ -46,11 +54,107 @@
   animation: shimmer 1.5s infinite;
 }
 
-/* Hide horizontal scrollbar but preserve scrolling for carousels */
+/* ===== NO SCROLLBAR (for horizontal rows) ===== */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* ===== SAFE AREA UTILITIES ===== */
+/* Bottom nav safe area — works on iOS devices with home indicator */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.mb-safe {
+  margin-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Combined bottom nav height + safe area */
+.pb-nav {
+  padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+}
+
+/* ===== HERO SWIPE CURSOR ===== */
+.hero-swipeable {
+  cursor: grab;
+  touch-action: pan-y pinch-zoom;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.hero-swipeable:active {
+  cursor: grabbing;
+}
+
+/* ===== HORIZONTAL SCROLL ROWS ===== */
+.scroll-row {
+  display: flex;
+  flex-direction: row;
+  overflow-x: auto;
+  overflow-y: visible;
+  gap: 0.75rem;
+  padding-bottom: 0.5rem;
+  /* Smooth momentum scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+}
+
+.scroll-row > * {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+
+/* ===== FADE ANIMATIONS ===== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleUp {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+.animate-scale-up {
+  animation: scaleUp 0.2s ease-out forwards;
+}
+
+/* ===== LINE CLAMP UTILITIES ===== */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.line-clamp-3 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+/* ===== FILTER BOTTOM SHEET ===== */
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.slide-up {
+  animation: slideUp 0.28s cubic-bezier(0.32, 0.72, 0, 1) forwards;
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Film } from 'lucide-react';
+import bLogo from '../../../img/bLogo.png';
 
 export default function Footer() {
   return (
@@ -9,12 +9,7 @@ export default function Footer() {
           {/* Logo & Description */}
           <div className="flex flex-col items-center md:items-start text-center md:text-left">
             <div className="flex items-center gap-2 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-cinema-accent to-red-600 flex items-center justify-center shadow-glow">
-                <Film className="w-4 h-4 text-white" />
-              </div>
-              <span className="text-lg font-bold text-white tracking-tight">
-                Cine<span className="text-cinema-accent">Scope</span>
-              </span>
+              <img src={bLogo} alt="MoviesMetro" className="h-9 w-auto object-contain" />
             </div>
             <p className="text-xs text-cinema-muted max-w-sm">
               Your ultimate movie discovery destination for trending titles, trailers, ratings, and streaming availability.
@@ -36,7 +31,7 @@ export default function Footer() {
               Streaming & watch-provider data is powered by JustWatch via TMDB.
             </p>
             <p className="text-[11px] text-cinema-muted/60">
-              © {new Date().getFullYear()} CineScope. All rights reserved.
+              © {new Date().getFullYear()} MoviesMetro. All rights reserved.
             </p>
           </div>
         </div>

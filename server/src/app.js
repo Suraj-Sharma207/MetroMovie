@@ -17,10 +17,29 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
 
-// CORS Configuration (Strict origin with credentials allowed)
+// CORS Configuration (Allow localhost, LAN IP network origins, and dev devices with credentials)
 app.use(cors({
-  origin: [config.clientUrl, 'http://localhost:5173', 'http://127.0.0.1:5173'],
-  credentials: true
+  origin: (origin, callback) => {
+    // Allow non-browser requests (e.g. mobile apps, curl, server-to-server)
+    if (!origin) return callback(null, true);
+
+    // Allow localhost, 127.0.0.1, or any LAN network IP (192.168.x.x, 10.x.x.x, 172.16-31.x.x)
+    const isLocalOrLan = /^https?:\/\/(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(1[6-9]|2\d|3[0-1])\.\d+\.\d+)(:\d+)?$/.test(origin);
+
+    if (isLocalOrLan || origin === config.clientUrl) {
+      return callback(null, true);
+    }
+
+    // In development, permit all origins for smooth testing on LAN devices
+    if (config.nodeEnv !== 'production') {
+      return callback(null, true);
+    }
+
+    callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
 }));
 
 // Body & Cookie Parsers

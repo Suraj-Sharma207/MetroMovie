@@ -69,3 +69,33 @@ export const getWatchProviders = async (req, res, next) => {
     next(err);
   }
 };
+
+export const getTopShows = async (req, res, next) => {
+  try {
+    const { region, country } = req.query;
+    const shows = await movieService.getTopShows(region || country || 'GLOBAL');
+    res.status(200).json({ success: true, data: shows });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getNewReleases = async (req, res, next) => {
+  try {
+    const { region, country } = req.query;
+    const movies = await movieService.getNewReleases(region || country || 'GLOBAL');
+    res.status(200).json({ success: true, data: movies });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getUpcomingMovies = async (req, res, next) => {
+  try {
+    const { region, country } = req.query;
+    const movies = await movieService.getUpcomingMovies(region || country || 'GLOBAL');
+    res.status(200).json({ success: true, data: movies });
+  } catch (err) {
+    next(err);
+  }
+};

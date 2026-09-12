@@ -149,6 +149,31 @@ export const normalizeMovieDetails = (movie, selectedCountry = DEFAULT_WATCH_REG
     .slice(0, 8)
     .map(m => normalizeMovieSummary(m));
 
+  // Extract Director & Writer from crew
+  const crew = movie.credits?.crew || [];
+  const directors = crew.filter(c => c.job === 'Director').map(c => c.name);
+  const director = directors.length > 0 ? directors.slice(0, 2).join(', ') : null;
+
+  const writers = crew.filter(c => ['Writer', 'Screenplay', 'Author', 'Story', 'Characters'].includes(c.job)).map(c => c.name);
+  const uniqueWriters = [...new Set(writers)];
+  const writer = uniqueWriters.length > 0 ? uniqueWriters.slice(0, 2).join(', ') : (director || null);
+
+  // Language & Country
+  const language = movie.spoken_languages?.[0]?.english_name 
+    || movie.spoken_languages?.[0]?.name 
+    || (movie.original_language ? movie.original_language.toUpperCase() : 'English');
+  const country = movie.production_countries?.[0]?.name 
+    || (Array.isArray(movie.origin_country) && movie.origin_country[0] ? movie.origin_country[0] : 'International');
+
+  // Format vote count e.g. 124K
+  const rawVoteCount = movie.vote_count || summary.voteCount || 0;
+  let voteCountFormatted = `${rawVoteCount}`;
+  if (rawVoteCount >= 1000000) {
+    voteCountFormatted = `${(rawVoteCount / 1000000).toFixed(1).replace(/\.0$/, '')}M`;
+  } else if (rawVoteCount >= 1000) {
+    voteCountFormatted = `${(rawVoteCount / 1000).toFixed(0)}K`;
+  }
+
   return {
     ...summary,
     runtime: movie.runtime || null,
@@ -159,6 +184,11 @@ export const normalizeMovieDetails = (movie, selectedCountry = DEFAULT_WATCH_REG
     revenue: movie.revenue || 0,
     genres: (movie.genres || []).map(g => ({ id: g.id, name: g.name })),
     cast,
+    director,
+    writer,
+    language,
+    country,
+    voteCountFormatted,
     trailer,
     watchProviders,
     recommendations,

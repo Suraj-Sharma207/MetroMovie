@@ -50,14 +50,12 @@ class MovieService {
     let movies = [];
 
     if (cleanRegion !== 'GLOBAL') {
-      // Fetch trending in the specified region via discover
+      // Fetch trending in the specified region via discover with origin country
       const response = await tmdbClient.get('/discover/movie', {
         params: {
-          region: cleanRegion,
-          watch_region: cleanRegion,
           sort_by: 'popularity.desc',
+          with_origin_country: cleanRegion,
           include_adult: false,
-          'vote_count.gte': 10
         }
       });
       movies = (response.data?.results || [])
@@ -96,12 +94,12 @@ class MovieService {
       page: sanitizedPage,
       sort_by: sortBy,
       include_adult: false,
-      'vote_count.gte': 50 // Avoid obscure noise with 1-2 votes
     };
 
     if (cleanRegion) {
-      params.region = cleanRegion;
-      params.watch_region = cleanRegion;
+      params.with_origin_country = cleanRegion;
+    } else {
+      params['vote_count.gte'] = 50; // Avoid obscure noise with 1-2 votes on global
     }
     if (genre) params.with_genres = genre;
     if (year) params.primary_release_year = year;
@@ -150,6 +148,156 @@ class MovieService {
   }
 
   /**
+   * Fetch top trending TV / web series (supports regional or global)
+   */
+  async getTopShows(region = 'GLOBAL') {
+    const cleanRegion = (region || 'GLOBAL').toUpperCase();
+    const cacheKey = `tmdb:shows:${cleanRegion}`;
+    const cached = cacheService.get(cacheKey);
+    if (cached) return cached;
+
+    const genreMap = await this.getGenreMap();
+    let shows = [];
+
+    if (cleanRegion === 'IN') {
+      // Major Indian OTT platforms streaming premium web series
+      // Amazon Prime Video: 1024, Netflix: 213, SonyLIV: 2646, Disney+ Hotstar: 3919,
+      // ZEE5: 2590, TVF: 2806, JioCinema: 4909, MX Player: 2595, Voot: 2026, Aha: 3758
+      const ottNetworks = '1024|213|2646|3919|2590|2806|4909|2595|2026|3758';
+
+      // Discover acclaimed web series across OTT networks with high audience ratings
+      const [res1, res2] = await Promise.all([
+        tmdbClient.get('/discover/tv', {
+          params: {
+            with_origin_country: 'IN',
+            with_networks: ottNetworks,
+            'vote_count.gte': 15,
+            'vote_average.gte': 7.0,
+            without_genres: '10766,10764,10767,10763', // Exclude Soap, Reality, Talk, News
+            sort_by: 'vote_count.desc',
+            page: 1,
+          }
+        }),
+        tmdbClient.get('/discover/tv', {
+          params: {
+            with_origin_country: 'IN',
+            with_networks: ottNetworks,
+            'vote_count.gte': 15,
+            'vote_average.gte': 7.0,
+            without_genres: '10766,10764,10767,10763',
+            sort_by: 'vote_count.desc',
+            page: 2,
+          }
+        })
+      ]);
+
+      const rawShows = [...(res1.data?.results || []), ...(res2.data?.results || [])];
+
+      // Broadcast TV channels that produce daily soaps (exclude broadcast serials)
+      const broadcastNetworks = [
+        'StarPlus',
+        'Zee TV',
+        'Colors',
+        'Sony Entertainment Television',
+        'Star Bharat',
+        'SAB TV',
+        'Star Jalsha',
+        'Sun TV',
+        'Colors TV',
+      ];
+
+      // Fetch show details in parallel to filter out broadcast TV daily serials with > 60 episodes
+      const details = await Promise.all(
+        rawShows.slice(0, 30).map(s =>
+          tmdbClient.get(`/tv/${s.id}`)
+            .then(r => r.data)
+            .catch(() => null)
+        )
+      );
+
+      const filteredShows = details.filter(d => {
+        if (!d) return false;
+        const hasBroadcast = d.networks?.some(n => broadcastNetworks.includes(n.name));
+        const isOver60Episodes = (d.number_of_episodes || 0) > 60;
+        return !hasBroadcast && !isOver60Episodes;
+      });
+
+      shows = (filteredShows.length > 0 ? filteredShows : rawShows)
+        .slice(0, 10)
+        .map(m => normalizeMovieSummary(m, genreMap));
+    } else if (cleanRegion !== 'GLOBAL') {
+      const response = await tmdbClient.get('/discover/tv', {
+        params: {
+          sort_by: 'popularity.desc',
+          with_origin_country: cleanRegion,
+          'vote_count.gte': 10,
+          without_genres: '10766,10764,10767,10763',
+          include_adult: false,
+        }
+      });
+      shows = (response.data?.results || [])
+        .slice(0, 10)
+        .map(m => normalizeMovieSummary(m, genreMap));
+    } else {
+      const response = await tmdbClient.get('/trending/tv/week');
+      shows = (response.data?.results || [])
+        .slice(0, 10)
+        .map(m => normalizeMovieSummary(m, genreMap));
+    }
+
+    cacheService.set(cacheKey, shows, CACHE_TTLS.TRENDING);
+    return shows;
+  }
+
+  /**
+   * Fetch new releases (now playing in theatres/digital, supports regional or global)
+   */
+  async getNewReleases(region = 'GLOBAL') {
+    const cleanRegion = (region || 'GLOBAL').toUpperCase();
+    const cacheKey = `tmdb:new_releases:${cleanRegion}`;
+    const cached = cacheService.get(cacheKey);
+    if (cached) return cached;
+
+    const genreMap = await this.getGenreMap();
+    const params = { include_adult: false };
+    if (cleanRegion !== 'GLOBAL') {
+      params.region = cleanRegion;
+    }
+
+    const response = await tmdbClient.get('/movie/now_playing', { params });
+    const movies = (response.data?.results || [])
+      .slice(0, 20)
+      .map(m => normalizeMovieSummary(m, genreMap));
+
+    cacheService.set(cacheKey, movies, CACHE_TTLS.TRENDING);
+    return movies;
+  }
+
+  /**
+   * Fetch upcoming movies releasing soon (supports regional or global)
+   */
+  async getUpcomingMovies(region = 'GLOBAL') {
+    const cleanRegion = (region || 'GLOBAL').toUpperCase();
+    const cacheKey = `tmdb:upcoming:${cleanRegion}`;
+    const cached = cacheService.get(cacheKey);
+    if (cached) return cached;
+
+    const genreMap = await this.getGenreMap();
+    const params = { include_adult: false };
+    if (cleanRegion !== 'GLOBAL') {
+      params.region = cleanRegion;
+    }
+
+    const response = await tmdbClient.get('/movie/upcoming', { params });
+    const movies = (response.data?.results || [])
+      .slice(0, 20)
+      .map(m => normalizeMovieSummary(m, genreMap));
+
+    cacheService.set(cacheKey, movies, CACHE_TTLS.TRENDING);
+    return movies;
+  }
+
+  /**
    * Fetch full composite movie details (details, credits, videos, recommendations, similar, watch providers)
    */
   async getMovieDetails(movieId, country = DEFAULT_WATCH_REGION) {
@@ -160,16 +308,30 @@ class MovieService {
       throw error;
     }
 
-    const cacheKey = `tmdb:movie:${id}:${country.toUpperCase()}`;
+    const cacheKey = `tmdb:details:${id}:${country.toUpperCase()}`;
     const cached = cacheService.get(cacheKey);
     if (cached) return cached;
 
     // Single roundtrip composite request using append_to_response
-    const response = await tmdbClient.get(`/movie/${id}`, {
-      params: {
-        append_to_response: 'credits,videos,recommendations,similar,watch/providers'
+    // Try /movie/:id first, fallback to /tv/:id if it's a TV show / web series
+    let response;
+    try {
+      response = await tmdbClient.get(`/movie/${id}`, {
+        params: {
+          append_to_response: 'credits,videos,recommendations,similar,watch/providers'
+        }
+      });
+    } catch (err) {
+      if (err.statusCode === 404 || err.response?.status === 404) {
+        response = await tmdbClient.get(`/tv/${id}`, {
+          params: {
+            append_to_response: 'credits,videos,recommendations,similar,watch/providers'
+          }
+        });
+      } else {
+        throw err;
       }
-    });
+    }
 
     const normalized = normalizeMovieDetails(response.data, country);
     cacheService.set(cacheKey, normalized, CACHE_TTLS.DETAILS);
@@ -193,7 +355,16 @@ class MovieService {
     const cached = cacheService.get(cacheKey);
     if (cached) return cached;
 
-    const response = await tmdbClient.get(`/movie/${id}/watch/providers`);
+    let response;
+    try {
+      response = await tmdbClient.get(`/movie/${id}/watch/providers`);
+    } catch (err) {
+      if (err.statusCode === 404 || err.response?.status === 404) {
+        response = await tmdbClient.get(`/tv/${id}/watch/providers`);
+      } else {
+        throw err;
+      }
+    }
     const normalized = normalizeWatchProviders(response.data, countryCode);
 
     cacheService.set(cacheKey, normalized, CACHE_TTLS.WATCH_PROVIDERS);

@@ -13,7 +13,7 @@ export const SUPPORTED_REGIONS = [
   { code: 'GLOBAL', name: 'Global', flag: '🌐' },
 ];
 
-const STORAGE_KEY = 'cinescope_user_region';
+const STORAGE_KEY = 'moviesmetro_user_region';
 
 function detectDefaultRegion() {
   try {
@@ -38,7 +38,7 @@ const RegionContext = createContext(null);
 
 export function RegionProvider({ children }) {
   const [regionCode, setRegionCode] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
+    const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('cinescope_user_region');
     if (saved && SUPPORTED_REGIONS.some((r) => r.code === saved)) {
       return saved;
     }

@@ -56,4 +56,34 @@ export const movieApi = {
     });
     return res.data.data;
   },
+
+  /**
+   * Fetch top trending TV / web series (supports region)
+   */
+  async getShows(region) {
+    const res = await apiClient.get('/movies/shows', {
+      params: region ? { region } : undefined,
+    });
+    return res.data.data;
+  },
+
+  /**
+   * Fetch new releases (theatrical/streaming, supports region)
+   */
+  async getNewReleases(region) {
+    const res = await apiClient.get('/movies/new-releases', {
+      params: region ? { region } : undefined,
+    });
+    return res.data.data;
+  },
+
+  /**
+   * Fetch upcoming movies releasing soon (supports region)
+   */
+  async getUpcoming(region) {
+    const res = await apiClient.get('/movies/upcoming', {
+      params: region ? { region } : undefined,
+    });
+    return res.data.data;
+  },
 };
