@@ -1,4 +1,4 @@
-# 🎬 MoviesMetro — Full-Stack Movie Discovery Platform
+# MoviesMetro — Full-Stack Movie Discovery Platform
 
 > A production-grade, responsive movie discovery web application built with **React**, **Node.js/Express**, **PostgreSQL**, and **Prisma ORM**, powered by the **TMDB API** and **JustWatch**.
 
@@ -11,7 +11,7 @@
 
 ---
 
-## 📌 Table of Contents
+## Table of Contents
 1. [Overview & Problem Statement](#-overview--problem-statement)
 2. [Key Features & User Experience](#-key-features--user-experience)
 3. [Architecture & System Design](#-architecture--system-design)
@@ -28,7 +28,7 @@
 
 ---
 
-## 📖 Overview & Problem Statement
+## Overview & Problem Statement
 
 **MoviesMetro** was engineered in response to the **Full-Stack Intern Assignment: Movie Discovery App**. The objective is to build a full-stack movie discovery platform that allows users to explore a massive catalog of films, discover titles based on genres and metrics, view deep details and streaming providers, and maintain a persistent personal wishlist.
 
@@ -40,7 +40,7 @@ Rather than building a simplistic API showcase, MoviesMetro was crafted as a **r
 
 ---
 
-## ✨ Key Features & User Experience
+## Key Features & User Experience
 
 ### 1. Discovery & Browsing
 - **Hero Spotlight Carousel**: Dynamic carousel showcasing trending movies with backdrops, ratings, synopsis, and direct trailer access.
@@ -70,7 +70,7 @@ Rather than building a simplistic API showcase, MoviesMetro was crafted as a **r
 
 ---
 
-## 🏛 Architecture & System Design
+## Architecture & System Design
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -110,7 +110,7 @@ Rather than building a simplistic API showcase, MoviesMetro was crafted as a **r
 
 ---
 
-## 💻 Technology Stack
+## Technology Stack
 
 ### Frontend
 - **Framework**: React 18 (Vite build system)
@@ -130,7 +130,7 @@ Rather than building a simplistic API showcase, MoviesMetro was crafted as a **r
 
 ---
 
-## 🛠 Approach Taken
+## Approach Taken
 
 1. **Abstraction Layer**: The frontend never connects to TMDB directly. All external API keys remain on the server, eliminating key leakage and allowing the backend to transform and sanitize third-party data into a clean, predictable API contract.
 2. **Resilience to Network and ISP Blocks**: In certain regions (including Indian ISPs), standard TMDB domain calls (`api.themoviedb.org`) encounter DPI resets. Our backend specifically routes through TMDB's unblocked API domain (`https://api.tmdb.org/3`), guaranteeing 100% uptime without requiring local DNS or proxy hacks.
@@ -140,7 +140,7 @@ Rather than building a simplistic API showcase, MoviesMetro was crafted as a **r
 
 ---
 
-## 🎯 Important Technical Decisions
+## Important Technical Decisions
 
 | Decision | Rationale |
 | :--- | :--- |
@@ -152,7 +152,7 @@ Rather than building a simplistic API showcase, MoviesMetro was crafted as a **r
 
 ---
 
-## 📋 Assumptions Made
+## Assumptions Made
 
 1. **Third-Party API Reliability**: Assumed TMDB may occasionally experience downtime or rate limiting; handled via Axios timeouts, automatic retries, and informative error banners.
 2. **Device Independence**: Assumed users access the platform across mobile phones, tablets, and widescreen desktops; fully responsive navigation with mobile drawer and fluid grid layouts.
@@ -161,7 +161,7 @@ Rather than building a simplistic API showcase, MoviesMetro was crafted as a **r
 
 ---
 
-## ⚠️ Known Limitations
+## Known Limitations
 
 1. **In-Memory Server Cache Lifespan**: The backend cache uses `node-cache` (RAM). In a horizontally scaled multi-server deployment, this should be replaced with a distributed cache like **Redis**.
 2. **Third-Party Video Availability**: Trailers depend on YouTube video availability through TMDB; titles without official trailers display an informative banner.
@@ -169,7 +169,7 @@ Rather than building a simplistic API showcase, MoviesMetro was crafted as a **r
 
 ---
 
-## 🤖 AI Transparency Statement
+## AI Transparency Statement
 
 In accordance with the assignment guidelines (**Section 6 & 7: Use of AI & AI Transparency**):
 
@@ -177,7 +177,7 @@ In accordance with the assignment guidelines (**Section 6 & 7: Use of AI & AI Tr
 
 ---
 
-## 🚀 Future Enhancements
+## Future Enhancements
 
 With additional time, the following features would be implemented:
 1. **Distributed Redis Caching**: Shared cache across multi-instance clusters with cache pre-warming on deployment.
@@ -188,7 +188,7 @@ With additional time, the following features would be implemented:
 
 ---
 
-## 📦 Setup & Installation Guide
+## Setup & Installation Guide
 
 ### Prerequisites
 - **Node.js**: v18.0.0 or higher
@@ -264,7 +264,7 @@ npm run client:dev
 
 ---
 
-## 📡 API Specification
+## API Specification
 
 ### Movie Endpoints (`/api/movies`)
 | Method | Endpoint | Description | Cache TTL |
@@ -293,7 +293,7 @@ npm run client:dev
 
 ---
 
-## ⚖️ Attributions & Legal
+## Attributions & Legal
 
 - **The Movie Database (TMDB)**: This product uses the TMDB API but is not endorsed or certified by TMDB.
 - **JustWatch**: Streaming availability data is powered by JustWatch via TMDB.
