@@ -1,4 +1,4 @@
-# 🎬 CineScope — Full-Stack Movie Discovery Platform
+# 🎬 MoviesMetro — Full-Stack Movie Discovery Platform
 
 > A production-grade, responsive movie discovery web application built with **React**, **Node.js/Express**, **PostgreSQL**, and **Prisma ORM**, powered by the **TMDB API** and **JustWatch**.
 
@@ -30,9 +30,9 @@
 
 ## 📖 Overview & Problem Statement
 
-**CineScope** was engineered in response to the **Full-Stack Intern Assignment: Movie Discovery App**. The objective is to build a full-stack movie discovery platform that allows users to explore a massive catalog of films, discover titles based on genres and metrics, view deep details and streaming providers, and maintain a persistent personal wishlist.
+**MoviesMetro** was engineered in response to the **Full-Stack Intern Assignment: Movie Discovery App**. The objective is to build a full-stack movie discovery platform that allows users to explore a massive catalog of films, discover titles based on genres and metrics, view deep details and streaming providers, and maintain a persistent personal wishlist.
 
-Rather than building a simplistic API showcase, CineScope was crafted as a **real consumer-grade movie discovery product** (reminiscent of IMDb and Letterboxd) featuring:
+Rather than building a simplistic API showcase, MoviesMetro was crafted as a **real consumer-grade movie discovery product** (reminiscent of IMDb and Letterboxd) featuring:
 - **Clean Backend Abstraction**: The client never communicates directly with third-party APIs. The Node.js server acts as an intelligent proxy, normalizing incoming data, shielding API secrets, and enforcing rate limiting.
 - **Two-Tier Caching**: High-efficiency in-memory server cache combined with TanStack React Query caching prevents duplicate requests and shields external services from traffic spikes.
 - **Enterprise Session Security**: Production-grade authentication using Argon2id password hashing, opaque server-side sessions stored in PostgreSQL, and strict `HttpOnly` / `SameSite` cookies (completely immune to client-side XSS token theft).
@@ -144,7 +144,7 @@ Rather than building a simplistic API showcase, CineScope was crafted as a **rea
 
 | Decision | Rationale |
 | :--- | :--- |
-| **Server-Side Sessions over JWT in LocalStorage** | Storing JWTs in `localStorage` exposes tokens to Cross-Site Scripting (XSS). CineScope uses random 32-byte cryptographically secure session IDs stored in `HttpOnly`, `SameSite=Lax` cookies, with SHA-256 token hashes stored in PostgreSQL. Even if the database is dumped, raw session tokens cannot be recovered. |
+| **Server-Side Sessions over JWT in LocalStorage** | Storing JWTs in `localStorage` exposes tokens to Cross-Site Scripting (XSS). MoviesMetro uses random 32-byte cryptographically secure session IDs stored in `HttpOnly`, `SameSite=Lax` cookies, with SHA-256 token hashes stored in PostgreSQL. Even if the database is dumped, raw session tokens cannot be recovered. |
 | **Argon2id over Bcrypt** | Argon2id is the winner of the Password Hashing Competition and provides superior defense against both GPU and ASIC-based brute-force attacks compared to legacy bcrypt. |
 | **Two-Tier Caching Architecture** | Server-side `node-cache` prevents hammering TMDB when multiple clients request the same popular titles. Client-side TanStack Query (`staleTime: 5 min`) prevents duplicate network requests during tab switching and navigation. |
 | **Single Round-Trip Movie Details** | Utilizes TMDB's `append_to_response=credits,videos,recommendations,similar,watch/providers` parameter to fetch complete movie details in a single HTTP request, eliminating round-trip waterfalls. |

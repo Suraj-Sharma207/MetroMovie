@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Search, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, X, ChevronLeft, ChevronRight, Film, Tv } from 'lucide-react';
 import { movieApi } from '../services/movieApi.js';
 import { useDebounce } from '../hooks/useDebounce.js';
 import { useRegion } from '../context/RegionContext.jsx';
@@ -12,6 +12,7 @@ import { EmptyState } from '../components/common/EmptyState.jsx';
 /**
  * Unified Browse + Search page.
  *
+ * - Supports both Movies and TV Web Series via media type toggle
  * - When search query is EMPTY → Discover mode: filter-driven paginated grid
  * - When search query is TYPED → Search mode: debounced real-time results
  * - Filters remain accessible in both modes via the filter bar / drawer
@@ -27,6 +28,7 @@ export default function SearchPage() {
   const sort = searchParams.get('sort') || 'popularity.desc';
   const rating = searchParams.get('rating') || '';
   const year = searchParams.get('year') || '';
+  const type = searchParams.get('type') || 'movie';
 
   // ── Local search input (debounced) ──────────────────────────────────
   const [inputValue, setInputValue] = useState(urlQuery);
@@ -85,7 +87,7 @@ export default function SearchPage() {
     error: discoverError,
     refetch: refetchDiscover,
   } = useQuery({
-    queryKey: ['movies', 'discover', { page, genre, sort, rating, year, region: currentRegion.code }],
+    queryKey: ['movies', 'discover', { page, genre, sort, rating, year, region: currentRegion.code, type }],
     queryFn: () =>
       movieApi.discover({
         page,
@@ -94,6 +96,7 @@ export default function SearchPage() {
         minRating: rating || undefined,
         year: year || undefined,
         region: currentRegion.code,
+        type,
       }),
     enabled: !urlQuery.trim(), // Only fetch when NOT searching
     keepPreviousData: true,
@@ -137,6 +140,7 @@ export default function SearchPage() {
   const handleResetFilters = () => {
     const newParams = new URLSearchParams();
     if (urlQuery) newParams.set('q', urlQuery);
+    if (type && type !== 'movie') newParams.set('type', type);
     setSearchParams(newParams);
   };
 
@@ -156,6 +160,58 @@ export default function SearchPage() {
     setSearchParams(newParams);
   };
 
+  // ── Dynamic page title based on active type, region & filters ───────
+  const getPageHeading = () => {
+    if (isSearchMode) {
+      return (
+        <>
+          Results for <span className="text-cinema-accent">"{urlQuery}"</span>
+        </>
+      );
+    }
+
+    const genreName = genre ? genres.find((g) => String(g.id) === String(genre))?.name : null;
+    const isTv = type === 'tv';
+    const mediaLabel = isTv ? 'Web Series' : 'Movies';
+
+    if (genreName) {
+      return (
+        <span>
+          {genreName} {mediaLabel}
+          {currentRegion.code !== 'GLOBAL' ? ` in ${currentRegion.name}` : ''}
+        </span>
+      );
+    }
+
+    if (isTv) {
+      return (
+        <span>
+          {currentRegion.code !== 'GLOBAL' ? `Top Web Series in ${currentRegion.name}` : 'Top Web Series & Shows'}
+        </span>
+      );
+    }
+
+    if (sort === 'vote_average.desc' && rating) {
+      return <span>Critically Acclaimed Movies</span>;
+    }
+
+    if (sort === 'popularity.desc') {
+      return (
+        <span>
+          {currentRegion.code !== 'GLOBAL' ? `Popular Movies in ${currentRegion.name}` : 'Popular Movies'}
+        </span>
+      );
+    }
+
+    if (sort?.startsWith('primary_release_date')) {
+      return <span>New & Recent Releases</span>;
+    }
+
+    return (
+      <span className="text-cinema-muted">Browse all {mediaLabel.toLowerCase()}</span>
+    );
+  };
+
   // ── Scroll to top on page change ─────────────────────────────────────
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -170,10 +226,10 @@ export default function SearchPage() {
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          placeholder="Search movies, actors, titles..."
+          placeholder="Search movies, web series, titles..."
           className="w-full bg-cinema-card border border-cinema-border rounded-2xl pl-11 pr-10 py-3.5 text-sm text-cinema-text placeholder-cinema-muted focus:outline-none focus:border-cinema-accent focus:ring-1 focus:ring-cinema-accent shadow-card transition-all"
           autoComplete="off"
-          aria-label="Search movies"
+          aria-label="Search movies and shows"
         />
         <Search className="w-4.5 h-4.5 text-cinema-muted absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
         {inputValue && (
@@ -184,6 +240,42 @@ export default function SearchPage() {
           >
             <X className="w-4 h-4" />
           </button>
+        )}
+      </div>
+
+      {/* ── MEDIA TYPE TOGGLE (Movies vs Web Series) ──────────────────── */}
+      <div className="flex items-center justify-between gap-3">
+        <div className="inline-flex items-center p-1 bg-cinema-card/90 border border-cinema-border/80 rounded-xl shadow-card">
+          <button
+            type="button"
+            onClick={() => updateParam('type', 'movie')}
+            className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              type !== 'tv'
+                ? 'bg-cinema-accent text-white shadow-glowSm'
+                : 'text-cinema-muted hover:text-white'
+            }`}
+          >
+            <Film className="w-3.5 h-3.5" />
+            <span>Movies</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => updateParam('type', 'tv')}
+            className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              type === 'tv'
+                ? 'bg-cinema-accent text-white shadow-glowSm'
+                : 'text-cinema-muted hover:text-white'
+            }`}
+          >
+            <Tv className="w-3.5 h-3.5" />
+            <span>Web Series</span>
+          </button>
+        </div>
+
+        {totalResults > 0 && !isLoading && (
+          <span className="text-xs text-cinema-muted">
+            {totalResults.toLocaleString()} {type === 'tv' ? 'shows' : 'movies'}
+          </span>
         )}
       </div>
 
@@ -204,38 +296,21 @@ export default function SearchPage() {
             onResetFilters={handleResetFilters}
           />
         </div>
-        {totalResults > 0 && !isLoading && (
-          <span className="md:hidden text-xs text-cinema-muted whitespace-nowrap flex-shrink-0">
-            {totalResults.toLocaleString()} titles
-          </span>
-        )}
       </div>
 
       {/* ── SECTION HEADING ───────────────────────────────────────────── */}
       <div className="flex items-center justify-between">
-        <h1 className="text-sm font-semibold text-cinema-text">
-          {isSearchMode ? (
-            <>
-              Results for{' '}
-              <span className="text-cinema-accent">"{urlQuery}"</span>
-            </>
-          ) : (
-            <span className="text-cinema-muted">Browse all movies</span>
-          )}
+        <h1 className="text-base sm:text-lg font-bold text-cinema-text">
+          {getPageHeading()}
         </h1>
-        {totalResults > 0 && !isLoading && (
-          <span className="hidden md:inline text-xs text-cinema-muted">
-            {totalResults.toLocaleString()} titles
-          </span>
-        )}
       </div>
 
       {/* ── RESULTS GRID ──────────────────────────────────────────────── */}
       {isSearchMode && !urlQuery.trim() ? (
         <EmptyState
           icon="search"
-          title="Search for any movie"
-          message="Type above to search, or browse all movies using the filters."
+          title={`Search for any ${type === 'tv' ? 'web series' : 'movie'}`}
+          message="Type above to search, or browse using the filters."
         />
       ) : (
         <MovieGrid
@@ -245,7 +320,7 @@ export default function SearchPage() {
           error={error}
           onRetry={refetch}
           skeletonCount={12}
-          emptyTitle={isSearchMode ? `No results for "${urlQuery}"` : 'No movies match your filters'}
+          emptyTitle={isSearchMode ? `No results for "${urlQuery}"` : `No ${type === 'tv' ? 'web series' : 'movies'} match your filters`}
           emptyMessage={
             isSearchMode
               ? 'Try different keywords or check your spelling.'

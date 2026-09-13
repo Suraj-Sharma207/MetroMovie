@@ -5,7 +5,7 @@ import { TMDB_BASE_URL } from './tmdbConstants.js';
 const headers = {
   Accept: 'application/json',
   'Content-Type': 'application/json',
-  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) CineScope/1.0',
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) MoviesMetro/1.0',
 };
 
 // Use Bearer token authorization if available

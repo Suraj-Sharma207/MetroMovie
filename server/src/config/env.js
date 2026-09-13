@@ -13,7 +13,7 @@ export const config = {
   isProduction: process.env.NODE_ENV === 'production',
 
   // Authentication & Session Configuration
-  sessionCookieName: clean(process.env.SESSION_COOKIE_NAME) || 'cinescope_session',
+  sessionCookieName: clean(process.env.SESSION_COOKIE_NAME) || 'moviesmetro_session',
   sessionIdleTimeoutMinutes: parseInt(process.env.SESSION_IDLE_TIMEOUT_MINUTES, 10) || 30,
   sessionAbsoluteTimeoutDays: parseInt(process.env.SESSION_ABSOLUTE_TIMEOUT_DAYS, 10) || 7,
   sessionActivityRefreshMinutes: parseInt(process.env.SESSION_ACTIVITY_REFRESH_MINUTES, 10) || 5

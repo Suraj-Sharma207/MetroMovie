@@ -138,7 +138,7 @@ export default function HomePage() {
               icon={Flame}
               movies={popularMovies}
               isLoading={isPopularLoading}
-              seeAllTo={`/search${selectedGenre ? `?genre=${selectedGenre}` : ''}`}
+              seeAllTo={`/search?type=movie&sort=popularity.desc${selectedGenre ? `&genre=${selectedGenre}` : ''}`}
             />
           </div>
 
@@ -157,7 +157,7 @@ export default function HomePage() {
                 </p>
               </div>
               <Link
-                to={`/search${selectedGenre ? `?genre=${selectedGenre}` : ''}`}
+                to={`/search?type=movie&sort=popularity.desc${selectedGenre ? `&genre=${selectedGenre}` : ''}`}
                 className="text-xs text-cinema-accent hover:text-cinema-accentHover font-semibold flex items-center gap-1 transition-colors"
               >
                 See All <ChevronRight className="w-4 h-4" />
@@ -193,7 +193,7 @@ export default function HomePage() {
               icon={Tv}
               movies={topShows}
               isLoading={isShowsLoading}
-              seeAllTo="/search"
+              seeAllTo="/search?type=tv"
             />
           </div>
 
@@ -212,7 +212,7 @@ export default function HomePage() {
                 </p>
               </div>
               <Link
-                to="/search"
+                to="/search?type=tv"
                 className="text-xs text-cinema-accent hover:text-cinema-accentHover font-semibold flex items-center gap-1 transition-colors"
               >
                 See All <ChevronRight className="w-4 h-4" />
@@ -245,7 +245,7 @@ export default function HomePage() {
             icon={Star}
             movies={topRatedMovies}
             isLoading={isTopRatedLoading}
-            seeAllTo="/search?sort=vote_average.desc&rating=8.0"
+            seeAllTo="/search?type=movie&sort=vote_average.desc&rating=8.0"
           />
         </div>
 
@@ -262,7 +262,7 @@ export default function HomePage() {
               </p>
             </div>
             <Link
-              to="/search?sort=vote_average.desc&rating=8.0"
+              to="/search?type=movie&sort=vote_average.desc&rating=8.0"
               className="text-xs text-cinema-accent hover:text-cinema-accentHover font-semibold flex items-center gap-1 transition-colors"
             >
               See All <ChevronRight className="w-4 h-4" />

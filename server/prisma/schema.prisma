@@ -1,4 +1,4 @@
-// Prisma Schema for CineScope Movie Discovery Application
+// Prisma Schema for MoviesMetro Movie Discovery Application
 // PostgreSQL datasource with User, Session, and scoped WishlistItem models
 
 generator client {

@@ -13,17 +13,35 @@ class MovieService {
    * Fetch official movie genres list with 24h caching
    */
   async getGenres() {
-    const cacheKey = 'tmdb:genres';
+    const cacheKey = 'tmdb:genres:all';
     const cached = cacheService.get(cacheKey);
     if (cached) return cached;
 
-    const response = await tmdbClient.get('/genre/movie/list', {
-      params: { language: 'en-US' }
-    });
+    try {
+      const [movieRes, tvRes] = await Promise.all([
+        tmdbClient.get('/genre/movie/list', { params: { language: 'en-US' } }),
+        tmdbClient.get('/genre/tv/list', { params: { language: 'en-US' } })
+      ]);
 
-    const genres = response.data?.genres || [];
-    cacheService.set(cacheKey, genres, CACHE_TTLS.GENRES);
-    return genres;
+      const movieGenres = movieRes.data?.genres || [];
+      const tvGenres = tvRes.data?.genres || [];
+
+      // Merge unique genres
+      const genreMap = new Map();
+      movieGenres.forEach(g => genreMap.set(g.id, g));
+      tvGenres.forEach(g => genreMap.set(g.id, g));
+      const genres = Array.from(genreMap.values());
+
+      cacheService.set(cacheKey, genres, CACHE_TTLS.GENRES);
+      return genres;
+    } catch {
+      const response = await tmdbClient.get('/genre/movie/list', {
+        params: { language: 'en-US' }
+      });
+      const genres = response.data?.genres || [];
+      cacheService.set(cacheKey, genres, CACHE_TTLS.GENRES);
+      return genres;
+    }
   }
 
   /**
@@ -73,7 +91,7 @@ class MovieService {
   }
 
   /**
-   * Discover movies with filters, sorting, and pagination
+   * Discover movies or TV web series with filters, sorting, and pagination
    */
   async discoverMovies({
     page = 1,
@@ -81,32 +99,56 @@ class MovieService {
     genre,
     year,
     minRating,
-    region
+    region,
+    type = 'movie'
   } = {}) {
     const sanitizedPage = Math.max(1, parseInt(page, 10) || 1);
     const cleanRegion = region && region !== 'GLOBAL' ? region.toUpperCase() : undefined;
-    const cacheKey = `tmdb:discover:${sanitizedPage}:${sortBy}:${genre || 'all'}:${year || 'all'}:${minRating || 'all'}:${cleanRegion || 'all'}`;
+    const isTv = type === 'tv' || type === 'shows';
+    const cacheKey = `tmdb:discover:${isTv ? 'tv' : 'movie'}:${sanitizedPage}:${sortBy}:${genre || 'all'}:${year || 'all'}:${minRating || 'all'}:${cleanRegion || 'all'}`;
 
     const cached = cacheService.get(cacheKey);
     if (cached) return cached;
 
+    const endpoint = isTv ? '/discover/tv' : '/discover/movie';
     const params = {
       page: sanitizedPage,
       sort_by: sortBy,
       include_adult: false,
     };
 
-    if (cleanRegion) {
-      params.with_origin_country = cleanRegion;
+    if (isTv) {
+      if (sortBy && sortBy.startsWith('primary_release_date')) {
+        params.sort_by = sortBy.replace('primary_release_date', 'first_air_date');
+      }
+      if (cleanRegion === 'IN') {
+        params.with_origin_country = 'IN';
+        params.with_networks = '1024|213|2646|3919|2590|2806|4909|2595|2026|3758';
+        params.without_genres = '10766,10764,10767,10763';
+        params['vote_count.gte'] = 10;
+      } else if (cleanRegion) {
+        params.with_origin_country = cleanRegion;
+        params.without_genres = '10766,10764,10767,10763';
+        params['vote_count.gte'] = 10;
+      } else {
+        params.without_genres = '10766,10764,10767,10763';
+        params['vote_count.gte'] = 20;
+      }
+      if (year) params.first_air_date_year = year;
     } else {
-      params['vote_count.gte'] = 50; // Avoid obscure noise with 1-2 votes on global
+      if (cleanRegion) {
+        params.with_origin_country = cleanRegion;
+      } else {
+        params['vote_count.gte'] = 50; // Avoid obscure noise with 1-2 votes on global
+      }
+      if (year) params.primary_release_year = year;
     }
+
     if (genre) params.with_genres = genre;
-    if (year) params.primary_release_year = year;
     if (minRating) params['vote_average.gte'] = minRating;
 
     const genreMap = await this.getGenreMap();
-    const response = await tmdbClient.get('/discover/movie', { params });
+    const response = await tmdbClient.get(endpoint, { params });
 
     const normalized = normalizePaginatedMovies(response.data, genreMap);
     cacheService.set(cacheKey, normalized, CACHE_TTLS.DISCOVER);
@@ -134,7 +176,7 @@ class MovieService {
     if (cached) return cached;
 
     const genreMap = await this.getGenreMap();
-    const response = await tmdbClient.get('/search/movie', {
+    const response = await tmdbClient.get('/search/multi', {
       params: {
         query: trimmedQuery,
         page: sanitizedPage,
@@ -142,7 +184,15 @@ class MovieService {
       }
     });
 
-    const normalized = normalizePaginatedMovies(response.data, genreMap);
+    // Filter out person records so only movies and TV shows are included in results
+    const filteredResults = (response.data?.results || []).filter(
+      item => item.media_type === 'movie' || item.media_type === 'tv'
+    );
+
+    const normalized = normalizePaginatedMovies({
+      ...response.data,
+      results: filteredResults
+    }, genreMap);
     cacheService.set(cacheKey, normalized, CACHE_TTLS.SEARCH);
     return normalized;
   }
